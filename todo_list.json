@@ -1,0 +1,42 @@
+[
+	{
+		"item": "Buy groceries",
+		"status": "Pending"
+	},
+	{
+		"item": "Clean the house",
+		"status": "In Progress"
+	},
+	{
+		"item": "Write blog post",
+		"status": "Completed"
+	},
+	{
+		"item": "Finish project",
+		"status": "Pending"
+	},
+	{
+		"item": "Call mom",
+		"status": "Completed"
+	},
+	{
+		"item": "Attend meeting",
+		"status": "Pending"
+	},
+	{
+		"item": "Read book",
+		"status": "In Progress"
+	},
+	{
+		"item": "Exercise",
+		"status": "Pending"
+	},
+	{
+		"item": "Plan vacation",
+		"status": "Completed"
+	},
+	{
+		"item": "Pay bills",
+		"status": "In Progress"
+	}
+]
