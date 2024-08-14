@@ -9,7 +9,7 @@ import (
 func syncDemo() {
 	var data int
 	var wg sync.WaitGroup
-	var mu sync.Mutex
+	// var mu sync.Mutex
 
 	done := make(chan bool)
 
@@ -18,7 +18,7 @@ func syncDemo() {
 	go func() {
 		defer wg.Done()
 		for i:=1; i<=9; i+=2 {
-			mu.Lock()
+			// mu.Lock()
 			data = i
 			fmt.Printf("Odd Goroutine - Setting data to %d\n", data)
 			// mu.Unlock()
@@ -27,18 +27,18 @@ func syncDemo() {
 
 			// mu.Lock()
 			fmt.Printf("Odd Goroutine - Current data: %d\n", data)
-			mu.Unlock()
+			// mu.Unlock()
 
-			done <- true
 		}
+		done <- true
 	}()
 
 	go func() {
 		defer wg.Done()
+		<- done
 		for i:=2; i<=10; i+=2 {
-			<- done
 			
-			mu.Lock()
+			// mu.Lock()
 			data = i
 			fmt.Printf("Even Goroutine - Setting data to %d\n", data)
 			// mu.Unlock()
@@ -47,7 +47,7 @@ func syncDemo() {
 
 			// mu.Lock()
 			fmt.Printf("Even Goroutine - Current data: %d\n", data)
-			mu.Unlock()
+			// mu.Unlock()
 		}
 	}()
 
