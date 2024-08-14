@@ -1,10 +1,13 @@
 package main
 
 import (
-	"bufio"
-	"os"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"slices"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 
@@ -13,110 +16,111 @@ type ToDo struct {
 	Status string `json:"status"`
 }
 
-var todoList []ToDo
+var todoList = make([]ToDo, 0)
 
+var todoChannel = make(chan func(), 1) // 1 is the buffer size of the channel
+var wg sync.WaitGroup
 
 func main() {
-	reader := bufio.NewReader(os.Stdin)
+	http.HandleFunc("/todos", getAndPostHandler)
+	http.HandleFunc("/todos/", putAndDeleteHandler)
 
-	for {
-		pl("---Welcome to the BEST To Do App---")
-		pl("1. View To Do List")
-		pl("2. Add To Do Item")
-		pl("3. Update To Do Item")
-		pl("4. Delete To Do Item")
-		pl("5. Exit")
-		pl("Enter your choice: ")
+	wg.Add(2)
 
-		choiceStr, _ := reader.ReadString('\n')
-		choiceStr = strings.TrimSpace(choiceStr)
-		choice, err := strconv.Atoi(choiceStr)
-		if err != nil {
-			pl("Invalid input, please enter a number.")
-			continue
+	go func() {
+		defer wg.Done()
+		pl("Starting server on port: 8080")
+		if err := http.ListenAndServe(":8080", nil); err != nil {
+			fmt.Printf("Server failed: %v\n", err)
+			close(todoChannel)
 		}
+	}()
+	
+	// exec channel messages
+	go func() {
+		defer wg.Done()
+		for op := range todoChannel {
+			op()
+		}
+	}()
 
-		switch choice {
-		case 1:
-			displayTodoList()
+		wg.Wait()
+}
 
-		case 2:
-			pl("Enter the new To Do item: ")
-			item, _ := reader.ReadString('\n')
-			item = strings.TrimSpace(item)
+func getAndPostHandler(w http.ResponseWriter, req *http.Request){
+	switch req.Method{
+	case http.MethodGet:
+		getTodo(w, req)
+	case http.MethodPost:
+		postTodo(w, req)
+	default:
+		http.Error(w, "Request Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
 
-			pl("Enter the status (Pending/In Progress/Completed): ")
-			status, _ := reader.ReadString('\n')
-			status = strings.TrimSpace(status)
-			if !isStatusValid(status) {
-				pl("Invaild status - Please enter 'Pending/In Progress/Completed' only\n")
-				continue
-			}
+func putAndDeleteHandler(w http.ResponseWriter, req *http.Request){
+	idStr := strings.TrimPrefix(req.URL.Path, "/todos/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id < 1 || id > len(todoList) {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+	}
 
-			addTodoList(item, status)
+	switch req.Method {
+	case http.MethodPut:
+		putTodo(w, req, id-1)
+	case http.MethodDelete:
+		deleteTodo(w, id-1)
+	default:
+		http.Error(w, "Request Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
 
-		case 3:
-			displayTodoList()
-			pl("Enter the item you want to update: ")
-			indexStr, _ := reader.ReadString('\n')
-			indexStr = strings.TrimSpace(indexStr)
+func getTodo(w http.ResponseWriter, req *http.Request){
+	todoChannel <- func() {
+		fmt.Println("GET:", todoList)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(todoList)
+	}
+}
 
-			index, err := strconv.Atoi(indexStr)
-			if err != nil || !isIndexValid(index) {
-				pl("Invalid input, please enter a vaild number\n")
-				continue
-			}
+func postTodo(w http.ResponseWriter, req *http.Request){
+	var newTodo ToDo
+	if err := json.NewDecoder(req.Body).Decode(&newTodo); err != nil { // Decoder read the JSON and store the value to newTodo
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+	todoChannel <- func() {
+		todoList = append(todoList, newTodo)
+		pl("POST: ",todoList)
+		// w.WriteHeader(http.StatusCreated)
+		fmt.Fprintf(w, "New To Do item added successfully")
+	}
+}
 
-			pl("1. Updated the name of the item")
-			pl("2. Updated the status of the item")
-			pl("Enter your choice: ")
+func putTodo(w http.ResponseWriter, req *http.Request, index int){
+	var updatedTodo ToDo
+	if err := json.NewDecoder(req.Body).Decode(&updatedTodo); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 
-			updateChoiceStr, _ := reader.ReadString('\n')
-			updateChoiceStr = strings.TrimSpace(updateChoiceStr)
-			updateChoice, err := strconv.Atoi(updateChoiceStr)
-			if err != nil {
-				pl("Invalid input, please enter a number\n")
-				continue
-			}
-
-			switch updateChoice {
-			case 1:
-				pl("Enter the new name of the item: ")
-				item, _ := reader.ReadString('\n')
-				item = strings.TrimSpace(item)
-				updateTodoItem(index-1, "item", item)
-			case 2:
-				pl("Enter the new status of the item (Pending/In Progress/Completed): ")
-				status, _ := reader.ReadString('\n')
-				status = strings.TrimSpace(status)
-				if !isStatusValid(status) {
-					pl("Invaild status - Please enter 'Pending/In Progress/Completed' only")
-					continue
-				}
-				updateTodoItem(index-1, "status", status)
-			default:
-				pl("Invalid choice - please enter the number 1 or 2")
-			}
-
-		case 4:
-			displayTodoList()
-			pl("Enter the item you want to delete: ")
-			indexStr, _ := reader.ReadString('\n')
-			indexStr = strings.TrimSpace(indexStr)
-
-			index, err := strconv.Atoi(indexStr)
-			if err != nil || !isIndexValid(index) {
-				pl("Invalid input, please enter a vaild number")
-				continue
-			}
-
-			deleteTodoItem(index-1)
-
-		case 5:
+	todoChannel <- func() {
+		if !isIndexValid(index){
+			http.Error(w, "Item not found", http.StatusNotFound)
 			return
-
-		default:
-			pl("Invalid choice, please enter a number between 1 and 5\n")
 		}
+		todoList[index] = updatedTodo
+		fmt.Fprintf(w, "Item updated successfully")
+	}
+}
+
+func deleteTodo(w http.ResponseWriter, index int){
+	todoChannel <- func ()  {
+		if !isIndexValid(index) {
+			http.Error(w, "Item not found", http.StatusNotFound)
+			return
+		}
+		todoList = slices.Delete(todoList, index, index+1)
+		fmt.Fprintf(w, "Item deleted successfully")
 	}
 }
