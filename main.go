@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
-	"strconv"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 
 type ToDo struct {
+	Id string `json:"id"`
 	Item string `json:"item"`
 	Status string `json:"status"`
 }
@@ -39,17 +41,12 @@ func getAndPostHandler(w http.ResponseWriter, req *http.Request){
 }
 
 func putAndDeleteHandler(w http.ResponseWriter, req *http.Request){
-	idStr := strings.TrimPrefix(req.URL.Path, "/todos/")
-	id, err := strconv.Atoi(idStr)
-	if err != nil || id < 1 || id > len(todoList) {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
-	}
-
+	id := strings.TrimPrefix(req.URL.Path, "/todos/")
 	switch req.Method {
 	case http.MethodPut:
-		putTodo(w, req, id-1)
+		putTodo(w, req, id)
 	case http.MethodDelete:
-		deleteTodo(w, id-1)
+		deleteTodo(w, id)
 	default:
 		http.Error(w, "Request Method not allowed", http.StatusMethodNotAllowed)
 	}
@@ -72,13 +69,16 @@ func postTodo(w http.ResponseWriter, req *http.Request){
 		return
 	}
 
+	newTodo.Id = uuid.New().String()
+
 	todoList = append(todoList, newTodo)
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(w, "New To Do item added successfully")
 }
 
-func putTodo(w http.ResponseWriter, req *http.Request, index int){
+func putTodo(w http.ResponseWriter, req *http.Request, id string){
 	var updatedTodo ToDo
+	updatedTodo.Id = id
 	if err := json.NewDecoder(req.Body).Decode(&updatedTodo); err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
@@ -89,20 +89,39 @@ func putTodo(w http.ResponseWriter, req *http.Request, index int){
 		return
 	}
 
-	if !isIndexValid(index){
-		http.Error(w, "Item not found", http.StatusNotFound)
+	var todoToUpdate *ToDo
+	for i, todo := range(todoList) {
+		if todo.Id == updatedTodo.Id{
+			todoToUpdate = &todoList[i] // return the memory address of founded todo item
+			break
+		}
+	}
+
+	if todoToUpdate == nil {
+		http.Error(w, "Item not found - Please check the Id", http.StatusNotFound)
 		return
 	}
 
-	todoList[index] = updatedTodo
+	*todoToUpdate = updatedTodo
 	fmt.Fprintf(w, "Item updated successfully")
 }
 
-func deleteTodo(w http.ResponseWriter, index int){
-		if !isIndexValid(index) {
+func deleteTodo(w http.ResponseWriter, id string){
+		var indexToDelete int
+
+		for i, todo := range todoList {
+			if todo.Id == id {
+				indexToDelete = i
+				break
+			}
+		}
+
+		if indexToDelete == -1 || len(todoList) < 1  {
 			http.Error(w, "Item not found", http.StatusNotFound)
 			return
 		}
-		todoList = slices.Delete(todoList, index, index+1)
+
+		todoList = slices.Delete(todoList, indexToDelete, indexToDelete+1)
+
 		fmt.Fprintf(w, "Item deleted successfully")
 }
