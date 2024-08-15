@@ -7,7 +7,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"sync"
 )
 
 
@@ -18,39 +17,20 @@ type ToDo struct {
 
 var todoList = make([]ToDo, 0)
 
-var todoChannel = make(chan func(), 1) // 1 is the buffer size of the channel
-var wg sync.WaitGroup
-
 func main() {
 	http.HandleFunc("/todos", getAndPostHandler)
 	http.HandleFunc("/todos/", putAndDeleteHandler)
 
-	wg.Add(2)
-
-	go func() {
-		defer wg.Done()
-		pl("Starting server on port: 8080")
-		if err := http.ListenAndServe(":8080", nil); err != nil {
-			fmt.Printf("Server failed: %v\n", err)
-			close(todoChannel)
-		}
-	}()
-	
-	// exec channel messages
-	go func() {
-		defer wg.Done()
-		for op := range todoChannel {
-			op()
-		}
-	}()
-
-		wg.Wait()
+	pl("Starting server on port: 8080")
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		fmt.Printf("Server failed: %v\n", err)
+	}
 }
 
 func getAndPostHandler(w http.ResponseWriter, req *http.Request){
 	switch req.Method{
 	case http.MethodGet:
-		getTodo(w, req)
+		getTodo(w)
 	case http.MethodPost:
 		postTodo(w, req)
 	default:
@@ -75,12 +55,9 @@ func putAndDeleteHandler(w http.ResponseWriter, req *http.Request){
 	}
 }
 
-func getTodo(w http.ResponseWriter, req *http.Request){
-	todoChannel <- func() {
-		fmt.Println("GET:", todoList)
+func getTodo(w http.ResponseWriter){
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(todoList)
-	}
 }
 
 func postTodo(w http.ResponseWriter, req *http.Request){
@@ -89,12 +66,15 @@ func postTodo(w http.ResponseWriter, req *http.Request){
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
-	todoChannel <- func() {
-		todoList = append(todoList, newTodo)
-		pl("POST: ",todoList)
-		// w.WriteHeader(http.StatusCreated)
-		fmt.Fprintf(w, "New To Do item added successfully")
+
+	if len(newTodo.Status)>0 && !isStatusValid(newTodo.Status) {
+		http.Error(w, "Bad Request - The status should only be Pending/In Progress/Compeleted", http.StatusBadRequest)
+		return
 	}
+
+	todoList = append(todoList, newTodo)
+	w.WriteHeader(http.StatusCreated)
+	fmt.Fprintf(w, "New To Do item added successfully")
 }
 
 func putTodo(w http.ResponseWriter, req *http.Request, index int){
@@ -104,23 +84,25 @@ func putTodo(w http.ResponseWriter, req *http.Request, index int){
 		return
 	}
 
-	todoChannel <- func() {
-		if !isIndexValid(index){
-			http.Error(w, "Item not found", http.StatusNotFound)
-			return
-		}
-		todoList[index] = updatedTodo
-		fmt.Fprintf(w, "Item updated successfully")
+	if len(updatedTodo.Status)>0 && !isStatusValid(updatedTodo.Status) {
+		http.Error(w, "Bad Request - The status should only be Pending/In Progress/Compeleted", http.StatusBadRequest)
+		return
 	}
+
+	if !isIndexValid(index){
+		http.Error(w, "Item not found", http.StatusNotFound)
+		return
+	}
+
+	todoList[index] = updatedTodo
+	fmt.Fprintf(w, "Item updated successfully")
 }
 
 func deleteTodo(w http.ResponseWriter, index int){
-	todoChannel <- func ()  {
 		if !isIndexValid(index) {
 			http.Error(w, "Item not found", http.StatusNotFound)
 			return
 		}
 		todoList = slices.Delete(todoList, index, index+1)
 		fmt.Fprintf(w, "Item deleted successfully")
-	}
 }
