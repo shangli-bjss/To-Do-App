@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"slices"
 	"strings"
+	"sync"
 
 	"github.com/google/uuid"
 )
@@ -18,6 +19,8 @@ type ToDo struct {
 }
 
 var todoList = make([]ToDo, 0)
+
+var todoListMutex sync.Mutex
 
 func main() {
 	http.HandleFunc("/todos", getAndPostHandler)
@@ -34,6 +37,8 @@ func getAndPostHandler(w http.ResponseWriter, req *http.Request){
 	case http.MethodGet:
 		getTodo(w)
 	case http.MethodPost:
+		todoListMutex.Lock()
+		defer todoListMutex.Unlock()
 		postTodo(w, req)
 	default:
 		http.Error(w, "Request Method not allowed", http.StatusMethodNotAllowed)
@@ -44,8 +49,12 @@ func putAndDeleteHandler(w http.ResponseWriter, req *http.Request){
 	id := strings.TrimPrefix(req.URL.Path, "/todos/")
 	switch req.Method {
 	case http.MethodPut:
+		todoListMutex.Lock()
+		defer todoListMutex.Unlock()
 		putTodo(w, req, id)
 	case http.MethodDelete:
+		todoListMutex.Lock()
+		defer todoListMutex.Unlock()
 		deleteTodo(w, id)
 	default:
 		http.Error(w, "Request Method not allowed", http.StatusMethodNotAllowed)
@@ -107,7 +116,7 @@ func putTodo(w http.ResponseWriter, req *http.Request, id string){
 }
 
 func deleteTodo(w http.ResponseWriter, id string){
-		var indexToDelete int
+		var indexToDelete int = -1
 
 		for i, todo := range todoList {
 			if todo.Id == id {
@@ -117,6 +126,7 @@ func deleteTodo(w http.ResponseWriter, id string){
 		}
 
 		if indexToDelete == -1 || len(todoList) < 1  {
+			pl("shoud hit here")
 			http.Error(w, "Item not found", http.StatusNotFound)
 			return
 		}
