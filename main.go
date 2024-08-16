@@ -126,7 +126,6 @@ func deleteTodo(w http.ResponseWriter, id string){
 		}
 
 		if indexToDelete == -1 || len(todoList) < 1  {
-			pl("shoud hit here")
 			http.Error(w, "Item not found", http.StatusNotFound)
 			return
 		}
