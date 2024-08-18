@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"slices"
 	"strings"
-	"sync"
 
 	"github.com/google/uuid"
 )
@@ -14,13 +13,13 @@ import (
 
 type ToDo struct {
 	Id string `json:"id"`
-	Item string `json:"item"`
-	Status string `json:"status"`
+	Title string `json:"title"`
+	Compeleted *bool `json:"compeleted"`
 }
 
 var todoList = make([]ToDo, 0)
-
-var todoListMutex sync.Mutex
+var pl = fmt.Println
+// var todoListMutex sync.Mutex
 
 func main() {
 	http.HandleFunc("/todos", getAndPostHandler)
@@ -68,13 +67,14 @@ func getTodo(w http.ResponseWriter){
 
 func postTodo(w http.ResponseWriter, req *http.Request){
 	var newTodo ToDo
-	if err := json.NewDecoder(req.Body).Decode(&newTodo); err != nil { // Decoder read the JSON and store the value to newTodo
+
+	if err := json.NewDecoder(req.Body).Decode(&newTodo); err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
-	if len(newTodo.Status)>0 && !isStatusValid(newTodo.Status) {
-		http.Error(w, "Bad Request - The status should only be Pending/In Progress/Compeleted", http.StatusBadRequest)
+	if newTodo.Id != "" || newTodo.Title == "" || newTodo.Compeleted == nil {
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 		return
 	}
 
@@ -86,21 +86,10 @@ func postTodo(w http.ResponseWriter, req *http.Request){
 }
 
 func putTodo(w http.ResponseWriter, req *http.Request, id string){
-	var updatedTodo ToDo
-	updatedTodo.Id = id
-	if err := json.NewDecoder(req.Body).Decode(&updatedTodo); err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
-
-	if len(updatedTodo.Status)>0 && !isStatusValid(updatedTodo.Status) {
-		http.Error(w, "Bad Request - The status should only be Pending/In Progress/Compeleted", http.StatusBadRequest)
-		return
-	}
-
 	var todoToUpdate *ToDo
+
 	for i, todo := range(todoList) {
-		if todo.Id == updatedTodo.Id{
+		if todo.Id == id{
 			todoToUpdate = &todoList[i] // return the memory address of founded todo item
 			break
 		}
@@ -108,6 +97,20 @@ func putTodo(w http.ResponseWriter, req *http.Request, id string){
 
 	if todoToUpdate == nil {
 		http.Error(w, "Item not found - Please check the Id", http.StatusNotFound)
+		return
+	}
+
+	var updatedTodo ToDo
+
+	updatedTodo.Id = id
+
+	if err := json.NewDecoder(req.Body).Decode(&updatedTodo); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	if updatedTodo.Title == "" || updatedTodo.Compeleted == nil {
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 		return
 	}
 
