@@ -37,8 +37,8 @@ func getAndPostHandler(w http.ResponseWriter, req *http.Request){
 	case http.MethodGet:
 		getTodo(w)
 	case http.MethodPost:
-		todoListMutex.Lock()
-		defer todoListMutex.Unlock()
+		// todoListMutex.Lock()
+		// defer todoListMutex.Unlock()
 		postTodo(w, req)
 	default:
 		http.Error(w, "Request Method not allowed", http.StatusMethodNotAllowed)
@@ -49,12 +49,12 @@ func putAndDeleteHandler(w http.ResponseWriter, req *http.Request){
 	id := strings.TrimPrefix(req.URL.Path, "/todos/")
 	switch req.Method {
 	case http.MethodPut:
-		todoListMutex.Lock()
-		defer todoListMutex.Unlock()
+		// todoListMutex.Lock()
+		// defer todoListMutex.Unlock()
 		putTodo(w, req, id)
 	case http.MethodDelete:
-		todoListMutex.Lock()
-		defer todoListMutex.Unlock()
+		// todoListMutex.Lock()
+		// defer todoListMutex.Unlock()
 		deleteTodo(w, id)
 	default:
 		http.Error(w, "Request Method not allowed", http.StatusMethodNotAllowed)
