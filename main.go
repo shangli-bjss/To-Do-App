@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"slices"
 	"strings"
@@ -15,7 +16,7 @@ import (
 type ToDo struct {
 	Id string `json:"id"`
 	Title string `json:"title"`
-	Compeleted *bool `json:"compeleted"`
+	Completed *bool `json:"completed"`
 }
 
 var todoList = make([]ToDo, 0)
@@ -28,7 +29,7 @@ func main() {
 
 	pl("Starting server on port: 8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
-		fmt.Printf("Server failed: %v\n", err)
+		log.Printf("Server failed: %v\n", err)
 	}
 }
 
@@ -74,7 +75,7 @@ func postTodo(w http.ResponseWriter, req *http.Request){
 		return
 	}
 
-	if newTodo.Id != "" || newTodo.Title == "" || newTodo.Compeleted == nil {
+	if newTodo.Id != "" || newTodo.Title == "" || newTodo.Completed == nil {
 		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 		return
 	}
@@ -113,7 +114,7 @@ func putTodo(w http.ResponseWriter, req *http.Request, id string){
 		return
 	}
 
-	if updatedTodo.Title == "" || updatedTodo.Compeleted == nil {
+	if updatedTodo.Title == "" || updatedTodo.Completed == nil {
 		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 		return
 	}
