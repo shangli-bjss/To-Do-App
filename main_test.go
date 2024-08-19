@@ -49,7 +49,7 @@ func TestGetAndPostHandler(t *testing.T) {
 
 			w := httptest.NewRecorder()
 			if req.Method == http.MethodPost {
-				req.Body = io.NopCloser(strings.NewReader(`{"item":"test","status":"Pending"}`))
+				req.Body = io.NopCloser(strings.NewReader(`{"title":"test","compeleted":false}`))
 			}
 			getAndPostHandler(w, req)
 
