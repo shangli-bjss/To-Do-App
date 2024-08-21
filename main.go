@@ -95,7 +95,7 @@ func putTodo(w http.ResponseWriter, req *http.Request, id string){
 
 	for i, todo := range(todoList) {
 		if todo.Id == id{
-			todoToUpdate = &todoList[i] // return the memory address of founded todo item
+			todoToUpdate = &todoList[i]
 			break
 		}
 	}
