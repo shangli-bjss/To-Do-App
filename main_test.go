@@ -8,12 +8,10 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"time"
 )
 
 func TestMain(t *testing.T) {
 	go main()
-	time.Sleep(1 * time.Second)
 	resp, err := http.Get("http://localhost:8080/todos")
 	if err != nil {
 		t.Errorf("Server failed to start %v", err)
@@ -74,7 +72,7 @@ func TestPutAndDeleteHandler(t *testing.T) {
 		name       string
 		method     string
 		id         string
-		statusCode int
+		expectedStatus int
 	}{
 		{"PUT request", http.MethodPut, "test-id", http.StatusOK},
 		{"DELETE request", http.MethodDelete, "test-id", http.StatusOK},
@@ -92,10 +90,11 @@ func TestPutAndDeleteHandler(t *testing.T) {
 			if req.Method == http.MethodPut {
 				req.Body = io.NopCloser(strings.NewReader(`{"title":"test","completed":false}`))
 			}
+
 			putAndDeleteHandler(w, req)
 
-			if w.Code != test.statusCode {
-				t.Errorf("expected status code %d, got %d", test.statusCode, w.Code)
+			if w.Code != test.expectedStatus {
+				t.Errorf("expected status code %d, got %d", test.expectedStatus, w.Code)
 			}
 		})
 	}
