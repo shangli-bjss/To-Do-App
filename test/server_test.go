@@ -1,12 +1,14 @@
-package server
+package test
 
 import (
 	"net/http"
 	"testing"
+
+	"todoapp/server"
 )
 
 func TestMain(t *testing.T) {
-	go StartServer()
+	go server.StartServer()
 	resp, err := http.Get("http://localhost:8080/todos")
 	if err != nil {
 		t.Errorf("Server failed to start %v", err)

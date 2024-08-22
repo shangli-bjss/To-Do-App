@@ -5,6 +5,6 @@ import (
 )
 
 func RegisterRoutes() {
-    http.HandleFunc("/todos", getAndPostHandler)
-    http.HandleFunc("/todos/", putAndDeleteHandler)
+    http.HandleFunc("/todos", GetAndPostHandler)
+    http.HandleFunc("/todos/", PutAndDeleteHandler)
 }
