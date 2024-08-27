@@ -1,4 +1,4 @@
-package test
+package server
 
 import (
 	"fmt"
@@ -7,12 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-
-	"todoapp/models"
-	"todoapp/server"
 )
-
-type ToDo = models.ToDo
 
 func TestGetAndPostHandler(t *testing.T) {
 	type request struct {
@@ -39,7 +34,7 @@ func TestGetAndPostHandler(t *testing.T) {
 				req.Body = io.NopCloser(strings.NewReader(`{"title":"test","completed":false}`))
 			}
 
-			server.GetAndPostHandler(w, req)
+			getAndPostHandler(w, req)
 
 			if w.Code != testReq.expectedStatus {
 				t.Errorf("Expected status code %d, got %d", testReq.expectedStatus, w.Code)
@@ -49,9 +44,9 @@ func TestGetAndPostHandler(t *testing.T) {
 }
 
 func TestPutAndDeleteHandler(t *testing.T) {
-	server.TodoList = []ToDo{}
+	TodoList = []ToDo{}
 
-	server.TodoList = append(server.TodoList, ToDo{
+	TodoList = append(TodoList, ToDo{
 		Id:        "test-id",
 		Title:     "Test Todo",
 		Completed: new(bool),
@@ -81,11 +76,11 @@ func TestPutAndDeleteHandler(t *testing.T) {
 				req.Body = io.NopCloser(strings.NewReader(`{"title":"updated test","completed":true}`))
 			}
 
-			server.PutAndDeleteHandler(w, req)
+			putAndDeleteHandler(w, req)
 
 			if w.Code != test.expectedStatus {
 				fmt.Println(req.URL)
-				fmt.Println(server.TodoList)
+				fmt.Println(TodoList)
 				t.Errorf("expected status code %d, got %d", test.expectedStatus, w.Code)
 			}
 		})

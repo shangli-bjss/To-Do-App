@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func GetAndPostHandler(w http.ResponseWriter, req *http.Request){
+func getAndPostHandler(w http.ResponseWriter, req *http.Request){
 	switch req.Method{
 	case http.MethodGet:
 		getTodo(w)
@@ -16,7 +16,7 @@ func GetAndPostHandler(w http.ResponseWriter, req *http.Request){
 	}
 }
 
-func PutAndDeleteHandler(w http.ResponseWriter, req *http.Request){
+func putAndDeleteHandler(w http.ResponseWriter, req *http.Request){
 	id := strings.TrimPrefix(req.URL.Path, "/todos/")
 	if id == "" {
 		http.Error(w, "Invalid URL path", http.StatusBadRequest)

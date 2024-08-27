@@ -1,4 +1,4 @@
-package test
+package server
 
 import (
 	"bytes"
@@ -7,14 +7,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"todoapp/server"
 )
 
 func TestGetTodo(t *testing.T) {
-	server.TodoList = []ToDo{}
+	TodoList = []ToDo{}
 
-	server.TodoList = append(server.TodoList, ToDo{
+	TodoList = append(TodoList, ToDo{
 		Id:        "test-id",
 		Title:     "Test Todo",
 		Completed: new(bool),
@@ -26,7 +24,7 @@ func TestGetTodo(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	handler := http.HandlerFunc(server.GetAndPostHandler)
+	handler := http.HandlerFunc(getAndPostHandler)
 
 	handler.ServeHTTP(w, req)
 
@@ -41,7 +39,7 @@ func TestGetTodo(t *testing.T) {
 	}
 
 	if len(response) != 1 {
-		fmt.Println("todolist on test", server.TodoList)
+		fmt.Println("todolist on test", TodoList)
 		t.Errorf("expected 1 todo but got %d", len(response))
 	}
 
@@ -51,7 +49,7 @@ func TestGetTodo(t *testing.T) {
 }
 
 func TestPostTodo(t *testing.T) {
-	server.TodoList = []ToDo{}
+	TodoList = []ToDo{}
 
 	newTodo := ToDo{
 		Title: "new todo",
@@ -65,7 +63,7 @@ func TestPostTodo(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	handler := http.HandlerFunc(server.GetAndPostHandler)
+	handler := http.HandlerFunc(getAndPostHandler)
 
 	handler.ServeHTTP(w, req)
 
@@ -73,20 +71,20 @@ func TestPostTodo(t *testing.T) {
 		t.Errorf("expected status code %d, but got %d", http.StatusCreated, w.Code)
 	}
 
-	if len(server.TodoList) != 1 {
-		t.Errorf("expected got 1 todo item, but got %d", len(server.TodoList))
+	if len(TodoList) != 1 {
+		t.Errorf("expected got 1 todo item, but got %d", len(TodoList))
 	}
 
-	if server.TodoList[0].Title != "new todo" {
-		t.Errorf("expected new todo title is 'new todo', but got %s", server.TodoList[0].Title)
+	if TodoList[0].Title != "new todo" {
+		t.Errorf("expected new todo title is 'new todo', but got %s", TodoList[0].Title)
 	}
 }
 
 func TestPutTodo(t *testing.T) {
-	server.TodoList = []ToDo{}
+	TodoList = []ToDo{}
 
 	testid := "test-id"
-	server.TodoList = append(server.TodoList, ToDo{
+	TodoList = append(TodoList, ToDo{
 		Id: testid,
 		Title: "test todo",
 		Completed: new(bool),
@@ -105,7 +103,7 @@ func TestPutTodo(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	handler := http.HandlerFunc(server.PutAndDeleteHandler)
+	handler := http.HandlerFunc(putAndDeleteHandler)
 
 	handler.ServeHTTP(w, req)
 
@@ -113,16 +111,16 @@ func TestPutTodo(t *testing.T) {
 		t.Errorf("expected status code %d, but got %d", http.StatusOK, w.Code)
 	}
 
-	if server.TodoList[0].Title != "updated todo" {
-		t.Errorf("expected todo title is 'updated todo', but got %s", server.TodoList[0].Title)
+	if TodoList[0].Title != "updated todo" {
+		t.Errorf("expected todo title is 'updated todo', but got %s", TodoList[0].Title)
 	}
 }
 
 func TestDeleteTodo(t *testing.T) {
-	server.TodoList = []ToDo{}
+	TodoList = []ToDo{}
 
 	testid := "test-id"
-	server.TodoList = append(server.TodoList, ToDo{
+	TodoList = append(TodoList, ToDo{
 		Id: testid,
 		Title: "test todo",
 		Completed: new(bool),
@@ -134,7 +132,7 @@ func TestDeleteTodo(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	handler := http.HandlerFunc(server.PutAndDeleteHandler)
+	handler := http.HandlerFunc(putAndDeleteHandler)
 	
 	handler.ServeHTTP(w, req)
 
@@ -142,7 +140,7 @@ func TestDeleteTodo(t *testing.T) {
 		t.Errorf("expected status code %d, but got %d", http.StatusOK, w.Code)
 	}
 
-	if len(server.TodoList) != 0 {
-		t.Errorf("expected todolist to be empty, but got %d items", len(server.TodoList))
+	if len(TodoList) != 0 {
+		t.Errorf("expected todolist to be empty, but got %d items", len(TodoList))
 	}
 }

@@ -16,8 +16,6 @@ type ToDo = models.ToDo
 var TodoList = make([]ToDo, 0)
 var todoListMutex sync.Mutex
 
-var test []string
-
 func getTodo(w http.ResponseWriter){
 	todoListMutex.Lock()
 	defer todoListMutex.Unlock()
