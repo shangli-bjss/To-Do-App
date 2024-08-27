@@ -80,6 +80,34 @@ func TestPostTodo(t *testing.T) {
 	}
 }
 
+func TestPostTodoInvalidJSONBody(t *testing.T) {
+	TodoList = []ToDo{}
+
+	newTodo := ToDo{
+		Title: "",
+		Completed: nil,
+	}
+
+	body, _ := json.Marshal(newTodo)
+	req, err := http.NewRequest("POST", "/todos", bytes.NewBuffer(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+	handler := http.HandlerFunc(getAndPostHandler)
+
+	handler.ServeHTTP(w, req)
+
+	if status := w.Code; status != http.StatusBadRequest {
+		t.Errorf("expected status code %d, but got %d", http.StatusBadRequest, w.Code)
+	}
+
+	if len(TodoList) != 0 {
+		t.Errorf("expected got 0 todo item, but got %d", len(TodoList))
+	}
+}
+
 func TestPutTodo(t *testing.T) {
 	TodoList = []ToDo{}
 
@@ -113,6 +141,78 @@ func TestPutTodo(t *testing.T) {
 
 	if TodoList[0].Title != "updated todo" {
 		t.Errorf("expected todo title is 'updated todo', but got %s", TodoList[0].Title)
+	}
+}
+
+func TestPutTodoInvalidId(t *testing.T) {
+	TodoList = []ToDo{}
+	invalidId := "invalidId"
+
+	TodoList = append(TodoList, ToDo{
+		Id: "testid",
+		Title: "test todo",
+		Completed: new(bool),
+	})
+
+	updatedTodo := ToDo{
+		Id: invalidId,
+		Title: "updated todo",
+		Completed: new(bool),
+	}
+
+	body, _ := json.Marshal(updatedTodo)
+	req, err := http.NewRequest("PUT", "/todos/"+invalidId, bytes.NewBuffer(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+	handler := http.HandlerFunc(putAndDeleteHandler)
+
+	handler.ServeHTTP(w, req)
+
+	if status := w.Code; status != http.StatusNotFound {
+		t.Errorf("expected status code %d, but got %d", http.StatusOK, w.Code)
+	}
+
+	if TodoList[0].Title != "test todo" {
+		t.Errorf("expected todo title is 'test todo', but got %s", TodoList[0].Title)
+	}
+}
+
+func TestPutTodoInvalidJSONBody(t *testing.T) {
+	TodoList = []ToDo{}
+
+	testid := "test-id"
+	TodoList = append(TodoList, ToDo{
+		Id: testid,
+		Title: "test todo",
+		Completed: new(bool),
+	})
+
+	updatedTodo := ToDo{
+		Id: testid,
+		Title: "",
+		Completed: nil,
+	}
+
+	body, _ := json.Marshal(updatedTodo)
+	req, err := http.NewRequest("PUT", "/todos/"+testid, bytes.NewBuffer(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+	handler := http.HandlerFunc(putAndDeleteHandler)
+
+	handler.ServeHTTP(w, req)
+
+	if status := w.Code; status != http.StatusBadRequest {
+		t.Errorf("expected status code %d, but got %d", http.StatusBadRequest, w.Code)
+	}
+
+	if TodoList[0].Title != "test todo" {
+		t.Errorf("expected todo title is 'test todo', but got %s", TodoList[0].Title)
 	}
 }
 

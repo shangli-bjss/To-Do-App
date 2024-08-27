@@ -60,6 +60,8 @@ func TestPutAndDeleteHandler(t *testing.T) {
 	}{
 		{"PUT request", http.MethodPut, "test-id", http.StatusOK},
 		{"DELETE request", http.MethodDelete, "test-id", http.StatusOK},
+		{"PUT request invalid id", http.MethodPut, "", http.StatusBadRequest},
+		{"DELETE request invalid id", http.MethodDelete, "", http.StatusBadRequest},
 		{"GET request", http.MethodGet, "test-id", http.StatusMethodNotAllowed},
 		{"POST request", http.MethodPost, "test-id", http.StatusMethodNotAllowed},
 	}
@@ -86,4 +88,5 @@ func TestPutAndDeleteHandler(t *testing.T) {
 		})
 	}
 }
+
 

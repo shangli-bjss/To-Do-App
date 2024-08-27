@@ -21,7 +21,6 @@ func getTodo(w http.ResponseWriter){
 	defer todoListMutex.Unlock()
 
 	w.Header().Set("Content-Type", "application/json")
-	fmt.Println("todolist on service", TodoList)
 	json.NewEncoder(w).Encode(TodoList)
 }
 
