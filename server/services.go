@@ -65,17 +65,20 @@ func putTodo(w http.ResponseWriter, req *http.Request, id string){
 		return
 	}
 
-	var updatedTodo ToDo
-
-	updatedTodo.Id = id
+	var updatedTodo ToDo = *todoToUpdate
 
 	if err := json.NewDecoder(req.Body).Decode(&updatedTodo); err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
+	if updatedTodo.Id != todoToUpdate.Id {
+		http.Error(w, "Forbidden - the id can't be updated", http.StatusForbidden)
+		return
+	}
+
 	if updatedTodo.Title == "" || updatedTodo.Completed == nil {
-		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON body - the title and completed can not be empty", http.StatusBadRequest)
 		return
 	}
 
