@@ -13,8 +13,12 @@ func TestGetTodo(t *testing.T) {
 	TodoList = []ToDo{}
 
 	TodoList = append(TodoList, ToDo{
-		Id:        "test-id",
-		Title:     "Test Todo",
+		Id: "test-id",
+		Title: "Test Todo",
+		Completed: new(bool),
+	}, ToDo{
+		Id: "123",
+		Title: "read book",
 		Completed: new(bool),
 	})
 
@@ -24,7 +28,7 @@ func TestGetTodo(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	handler := http.HandlerFunc(getAndPostHandler)
+	handler := http.HandlerFunc(todosHandler)
 
 	handler.ServeHTTP(w, req)
 
@@ -38,13 +42,51 @@ func TestGetTodo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(response) != 1 {
+	if len(response) != 2 {
 		fmt.Println("todolist on test", TodoList)
 		t.Errorf("expected 1 todo but got %d", len(response))
 	}
 
 	if response[0].Id != "test-id" {
 		t.Errorf("expectd id is 'test-id', but got %s", response[0].Id)
+	}
+}
+
+func TestGetTodoById(t *testing.T) {
+	TodoList = []ToDo{}
+
+	TodoList = append(TodoList, ToDo{
+		Id: "test-id",
+		Title: "Test Todo",
+		Completed: new(bool),
+	}, ToDo{
+		Id: "123",
+		Title: "read book",
+		Completed: new(bool),
+	})
+
+	req, err := http.NewRequest("GET", "/todos/test-id", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+	handler := http.HandlerFunc(todosByIdHandler)
+
+	handler.ServeHTTP(w, req)
+
+	if status := w.Code; status != http.StatusOK {
+		t.Errorf("expected status code %d, got %d", http.StatusOK, status)
+	}
+
+	var response ToDo
+	err = json.Unmarshal(w.Body.Bytes(), &response)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if response.Id != "test-id" {
+		t.Errorf("expectd id is 'test-id', but got %s", response.Id)
 	}
 }
 
@@ -63,7 +105,7 @@ func TestPostTodo(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	handler := http.HandlerFunc(getAndPostHandler)
+	handler := http.HandlerFunc(todosHandler)
 
 	handler.ServeHTTP(w, req)
 
@@ -95,7 +137,7 @@ func TestPostTodoInvalidJSONBody(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	handler := http.HandlerFunc(getAndPostHandler)
+	handler := http.HandlerFunc(todosHandler)
 
 	handler.ServeHTTP(w, req)
 
@@ -131,7 +173,7 @@ func TestPutTodo(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	handler := http.HandlerFunc(putAndDeleteHandler)
+	handler := http.HandlerFunc(todosByIdHandler)
 
 	handler.ServeHTTP(w, req)
 
@@ -167,7 +209,7 @@ func TestPutTodoInvalidId(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	handler := http.HandlerFunc(putAndDeleteHandler)
+	handler := http.HandlerFunc(todosByIdHandler)
 
 	handler.ServeHTTP(w, req)
 
@@ -199,7 +241,7 @@ func TestPutTodoWithId(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	handler := http.HandlerFunc(putAndDeleteHandler)
+	handler := http.HandlerFunc(todosByIdHandler)
 
 	handler.ServeHTTP(w, req)
 
@@ -231,7 +273,7 @@ func TestPutTodoInvalidJSONBody(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	handler := http.HandlerFunc(putAndDeleteHandler)
+	handler := http.HandlerFunc(todosByIdHandler)
 
 	handler.ServeHTTP(w, req)
 
@@ -256,7 +298,7 @@ func TestDeleteTodo(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	handler := http.HandlerFunc(putAndDeleteHandler)
+	handler := http.HandlerFunc(todosByIdHandler)
 	
 	handler.ServeHTTP(w, req)
 
