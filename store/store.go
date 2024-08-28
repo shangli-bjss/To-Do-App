@@ -1,4 +1,4 @@
-package main
+package store
 
 import (
 	"database/sql"
@@ -7,6 +7,7 @@ import (
 	"todoapp/models"
 
 	"github.com/google/uuid"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Todo = models.ToDo
@@ -37,8 +38,8 @@ func NewTodoStore(dbPath string) (*TodoStore, error) {
 func (s *TodoStore) initDB() error {
 	_, err := s.db.Exec(`CREATE TABLE IF NOT EXISTS todos (
 		id TEXT PRIMARY KEY,
-		title TEXT,
-		completed BOOLEAN
+		title TEXT NOT NULL,
+		completed BOOLEAN NOT NULL
 	)`)
 	return err
 }
@@ -47,7 +48,7 @@ func (s *TodoStore) Close() error {
 	return s.db.Close()
 }
 
-func (s *TodoStore) GetTodos() ([]Todo, error) {
+func (s *TodoStore) GetAllTodos() ([]Todo, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -92,6 +93,22 @@ func (s *TodoStore) CreateTodo(title string, completed *bool) (Todo, error) {
 	}
 
 	if err := tx.Commit(); err != nil {
+		return Todo{}, err
+	}
+
+	return todo, nil
+}
+
+func (s *TodoStore) GetTodo(id string) (Todo, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var todo Todo
+	err := s.db.QueryRow("SELECT id, title, completed FROM todos WHERE id = ?", id).
+		Scan(&todo.Id, &todo.Title, &todo.Completed)
+	if err == sql.ErrNoRows {
+		return Todo{}, errors.New("todo not found")
+	} else if err != nil {
 		return Todo{}, err
 	}
 

@@ -4,30 +4,26 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"slices"
-	"sync"
 	"todoapp/models"
-
-	"github.com/google/uuid"
+	"todoapp/store"
 )
 
 type ToDo = models.ToDo
 
-var TodoList = make([]ToDo, 0)
-var todoListMutex = &sync.RWMutex{}
+var st *store.TodoStore
 
 func getTodos(w http.ResponseWriter){
-	todoListMutex.RLock()
-	defer todoListMutex.RUnlock()
+	todos, err := st.GetAllTodos()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(TodoList)
+	json.NewEncoder(w).Encode(todos)
 }
 
 func postTodo(w http.ResponseWriter, req *http.Request){
-	todoListMutex.Lock()
-	defer todoListMutex.Unlock()
-	
 	var newTodo ToDo
 
 	if err := json.NewDecoder(req.Body).Decode(&newTodo); err != nil {
@@ -40,93 +36,81 @@ func postTodo(w http.ResponseWriter, req *http.Request){
 		return
 	}
 
-	newTodo.Id = uuid.New().String()
+	_, err := st.CreateTodo(newTodo.Title, newTodo.Completed)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	TodoList = append(TodoList, newTodo)
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(w, "New To Do item added successfully")
 }
 
 func getTodoById(w http.ResponseWriter, id string){
-	todoListMutex.RLock()
-	defer todoListMutex.RUnlock()
-
-	var findTodoById *ToDo
-
-	for i, todo := range(TodoList) {
-		if todo.Id == id {
-			findTodoById = &TodoList[i]
-			break
+	todo, err := st.GetTodo(id)
+	if err != nil {
+		if err.Error() == "todo not found" {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-	}
-
-	if findTodoById == nil {
-		http.Error(w, "Item not found - Please check the Id", http.StatusNotFound)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(findTodoById)
+	json.NewEncoder(w).Encode(todo)
 }
 
 func putTodo(w http.ResponseWriter, req *http.Request, id string){
-	todoListMutex.Lock()
-	defer todoListMutex.Unlock()
-
-	var todoToUpdate *ToDo
-
-	for i, todo := range(TodoList) {
-		if todo.Id == id{
-			todoToUpdate = &TodoList[i]
-			break
+	todo, err := st.GetTodo(id)
+	if err != nil {
+		if err.Error() == "todo not found" {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-	}
-
-	if todoToUpdate == nil {
-		http.Error(w, "Item not found - Please check the Id", http.StatusNotFound)
 		return
 	}
 
-	var updatedTodo ToDo = *todoToUpdate
+	var updatedTodo ToDo = todo
 
 	if err := json.NewDecoder(req.Body).Decode(&updatedTodo); err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
-	if updatedTodo.Id != todoToUpdate.Id {
+	if updatedTodo.Id != todo.Id {
 		http.Error(w, "Forbidden - the id can't be updated", http.StatusForbidden)
 		return
 	}
 
 	if updatedTodo.Title == "" || updatedTodo.Completed == nil {
-		http.Error(w, "Invalid JSON body - the title and completed can not be empty", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 		return
 	}
 
-	*todoToUpdate = updatedTodo
+	err = st.UpdateTodo(id, updatedTodo.Title, *updatedTodo.Completed)
+	if err != nil {
+		if err.Error() == "todo not found" {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
 	fmt.Fprintf(w, "Item updated successfully")
 }
 
 func deleteTodo(w http.ResponseWriter, id string){
-	todoListMutex.Lock()
-	defer todoListMutex.Unlock()
-
-	var indexToDelete int = -1
-
-		for i, todo := range TodoList {
-			if todo.Id == id {
-				indexToDelete = i
-				break
-			}
+	err := st.DeleteTodo(id)
+	if err != nil {
+		if err.Error() == "todo not found" {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-
-		if indexToDelete == -1 || len(TodoList) < 1  {
-			http.Error(w, "Item not found - Please check the Id", http.StatusNotFound)
-			return
-		}
-
-		TodoList = slices.Delete(TodoList, indexToDelete, indexToDelete+1)
-
+		return
+	}
 		fmt.Fprintf(w, "Item deleted successfully")
 }
