@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -9,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestGetAndPostHandler(t *testing.T) {
+func TestTodosHandler(t *testing.T) {
 	type request struct {
 		name string
 		method string
@@ -34,7 +33,7 @@ func TestGetAndPostHandler(t *testing.T) {
 				req.Body = io.NopCloser(strings.NewReader(`{"title":"test","completed":false}`))
 			}
 
-			getAndPostHandler(w, req)
+			todosHandler(w, req)
 
 			if w.Code != testReq.expectedStatus {
 				t.Errorf("Expected status code %d, got %d", testReq.expectedStatus, w.Code)
@@ -43,11 +42,12 @@ func TestGetAndPostHandler(t *testing.T) {
 	}
 }
 
-func TestPutAndDeleteHandler(t *testing.T) {
+func TestTodosByIdHandle(t *testing.T) {
 	TodoList = []ToDo{}
+	mockid := "mockid"
 
 	TodoList = append(TodoList, ToDo{
-		Id:        "test-id",
+		Id:        mockid,
 		Title:     "Test Todo",
 		Completed: new(bool),
 	})
@@ -58,12 +58,12 @@ func TestPutAndDeleteHandler(t *testing.T) {
 		id         string
 		expectedStatus int
 	}{
-		{"PUT request", http.MethodPut, "test-id", http.StatusOK},
-		{"DELETE request", http.MethodDelete, "test-id", http.StatusOK},
+		{"GET request", http.MethodGet, mockid, http.StatusOK},
+		{"POST request", http.MethodPost, mockid, http.StatusMethodNotAllowed},
 		{"PUT request invalid id", http.MethodPut, "", http.StatusBadRequest},
 		{"DELETE request invalid id", http.MethodDelete, "", http.StatusBadRequest},
-		{"GET request", http.MethodGet, "test-id", http.StatusMethodNotAllowed},
-		{"POST request", http.MethodPost, "test-id", http.StatusMethodNotAllowed},
+		{"PUT request", http.MethodPut, mockid, http.StatusOK},
+		{"DELETE request", http.MethodDelete, mockid, http.StatusOK},
 	}
 	
 	for _, test := range tests {
@@ -78,11 +78,9 @@ func TestPutAndDeleteHandler(t *testing.T) {
 				req.Body = io.NopCloser(strings.NewReader(`{"title":"updated test","completed":true}`))
 			}
 
-			putAndDeleteHandler(w, req)
+			todosByIdHandler(w, req)
 
 			if w.Code != test.expectedStatus {
-				fmt.Println(req.URL)
-				fmt.Println(TodoList)
 				t.Errorf("expected status code %d, got %d", test.expectedStatus, w.Code)
 			}
 		})
