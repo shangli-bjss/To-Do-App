@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"todoapp/models"
 	"todoapp/store"
 )
 
-type ToDo = models.ToDo
+type Todo = store.Todo
 
 var st *store.TodoStore
 
@@ -24,7 +23,7 @@ func getTodos(w http.ResponseWriter){
 }
 
 func postTodo(w http.ResponseWriter, req *http.Request){
-	var newTodo ToDo
+	var newTodo Todo
 
 	if err := json.NewDecoder(req.Body).Decode(&newTodo); err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
@@ -72,7 +71,7 @@ func putTodo(w http.ResponseWriter, req *http.Request, id string){
 		return
 	}
 
-	var updatedTodo ToDo = todo
+	var updatedTodo Todo = todo
 
 	if err := json.NewDecoder(req.Body).Decode(&updatedTodo); err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)

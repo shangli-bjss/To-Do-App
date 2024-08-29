@@ -43,10 +43,10 @@ func TestTodosHandler(t *testing.T) {
 }
 
 func TestTodosByIdHandle(t *testing.T) {
-	TodoList = []ToDo{}
+	TodoList = []Todo{}
 	mockid := "mockid"
 
-	TodoList = append(TodoList, ToDo{
+	TodoList = append(TodoList, Todo{
 		Id:        mockid,
 		Title:     "Test Todo",
 		Completed: new(bool),

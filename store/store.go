@@ -4,13 +4,16 @@ import (
 	"database/sql"
 	"errors"
 	"sync"
-	"todoapp/models"
 
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type Todo = models.ToDo
+type Todo struct {
+	Id string `json:"id"`
+	Title string `json:"title"`
+	Completed *bool `json:"completed"`
+}
 
 type TodoStore struct {
 	db *sql.DB

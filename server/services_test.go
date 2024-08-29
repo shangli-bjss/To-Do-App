@@ -10,13 +10,13 @@ import (
 )
 
 func TestGetTodo(t *testing.T) {
-	TodoList = []ToDo{}
+	TodoList = []Todo{}
 
-	TodoList = append(TodoList, ToDo{
+	TodoList = append(TodoList, Todo{
 		Id: "test-id",
 		Title: "Test Todo",
 		Completed: new(bool),
-	}, ToDo{
+	}, Todo{
 		Id: "123",
 		Title: "read book",
 		Completed: new(bool),
@@ -36,7 +36,7 @@ func TestGetTodo(t *testing.T) {
 		t.Errorf("expected status code %d, got %d", http.StatusOK, status)
 	}
 
-	var response []ToDo
+	var response []Todo
 	err = json.Unmarshal(w.Body.Bytes(), &response)
 	if err != nil {
 		t.Fatal(err)
@@ -53,13 +53,13 @@ func TestGetTodo(t *testing.T) {
 }
 
 func TestGetTodoById(t *testing.T) {
-	TodoList = []ToDo{}
+	TodoList = []Todo{}
 
-	TodoList = append(TodoList, ToDo{
+	TodoList = append(TodoList, Todo{
 		Id: "test-id",
 		Title: "Test Todo",
 		Completed: new(bool),
-	}, ToDo{
+	}, Todo{
 		Id: "123",
 		Title: "read book",
 		Completed: new(bool),
@@ -79,7 +79,7 @@ func TestGetTodoById(t *testing.T) {
 		t.Errorf("expected status code %d, got %d", http.StatusOK, status)
 	}
 
-	var response ToDo
+	var response Todo
 	err = json.Unmarshal(w.Body.Bytes(), &response)
 	if err != nil {
 		t.Fatal(err)
@@ -91,9 +91,9 @@ func TestGetTodoById(t *testing.T) {
 }
 
 func TestPostTodo(t *testing.T) {
-	TodoList = []ToDo{}
+	TodoList = []Todo{}
 
-	newTodo := ToDo{
+	newTodo := Todo{
 		Title: "new todo",
 		Completed: new(bool),
 	}
@@ -123,9 +123,9 @@ func TestPostTodo(t *testing.T) {
 }
 
 func TestPostTodoInvalidJSONBody(t *testing.T) {
-	TodoList = []ToDo{}
+	TodoList = []Todo{}
 
-	newTodo := ToDo{
+	newTodo := Todo{
 		Title: "",
 		Completed: nil,
 	}
@@ -151,16 +151,16 @@ func TestPostTodoInvalidJSONBody(t *testing.T) {
 }
 
 func TestPutTodo(t *testing.T) {
-	TodoList = []ToDo{}
+	TodoList = []Todo{}
 
 	testid := "test-id"
-	TodoList = append(TodoList, ToDo{
+	TodoList = append(TodoList, Todo{
 		Id: testid,
 		Title: "test todo",
 		Completed: new(bool),
 	})
 
-	updatedTodo := ToDo{
+	updatedTodo := Todo{
 		Id: testid,
 		Title: "updated todo",
 		Completed: new(bool),
@@ -187,16 +187,16 @@ func TestPutTodo(t *testing.T) {
 }
 
 func TestPutTodoInvalidId(t *testing.T) {
-	TodoList = []ToDo{}
+	TodoList = []Todo{}
 	invalidId := "invalidId"
 
-	TodoList = append(TodoList, ToDo{
+	TodoList = append(TodoList, Todo{
 		Id: "testid",
 		Title: "test todo",
 		Completed: new(bool),
 	})
 
-	updatedTodo := ToDo{
+	updatedTodo := Todo{
 		Id: invalidId,
 		Title: "updated todo",
 		Completed: new(bool),
@@ -219,16 +219,16 @@ func TestPutTodoInvalidId(t *testing.T) {
 }
 
 func TestPutTodoWithId(t *testing.T) {
-	TodoList = []ToDo{}
+	TodoList = []Todo{}
 	testId := "testid"
 
-	TodoList = append(TodoList, ToDo{
+	TodoList = append(TodoList, Todo{
 		Id: testId,
 		Title: "test todo",
 		Completed: new(bool),
 	})
 
-	updatedTodo := ToDo{
+	updatedTodo := Todo{
 		Id: "newid",
 		Title: "update todo",
 		Completed: new(bool),
@@ -251,16 +251,16 @@ func TestPutTodoWithId(t *testing.T) {
 }
 
 func TestPutTodoInvalidJSONBody(t *testing.T) {
-	TodoList = []ToDo{}
+	TodoList = []Todo{}
 
 	testid := "test-id"
-	TodoList = append(TodoList, ToDo{
+	TodoList = append(TodoList, Todo{
 		Id: testid,
 		Title: "test todo",
 		Completed: new(bool),
 	})
 
-	updatedTodo := ToDo{
+	updatedTodo := Todo{
 		Id: testid,
 		Title: "",
 		Completed: nil,
@@ -283,10 +283,10 @@ func TestPutTodoInvalidJSONBody(t *testing.T) {
 }
 
 func TestDeleteTodo(t *testing.T) {
-	TodoList = []ToDo{}
+	TodoList = []Todo{}
 
 	testid := "test-id"
-	TodoList = append(TodoList, ToDo{
+	TodoList = append(TodoList, Todo{
 		Id: testid,
 		Title: "test todo",
 		Completed: new(bool),
