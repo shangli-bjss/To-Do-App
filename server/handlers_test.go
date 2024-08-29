@@ -8,17 +8,19 @@ import (
 	"testing"
 )
 
+type TestRequest struct {
+	name string
+	method string
+	id string
+	expectedStatus int
+}
+
 func TestTodosHandler(t *testing.T) {
-	type request struct {
-		name string
-		method string
-		expectedStatus int
-	}
-	testRequests := []request{
-		{"GET request", http.MethodGet, http.StatusOK},
-		{"POST request", http.MethodPost, http.StatusCreated},
-		{"PUT request", http.MethodPut, http.StatusMethodNotAllowed},
-		{"DELETE request", http.MethodDelete, http.StatusMethodNotAllowed},
+	testRequests := []TestRequest {
+		{"GET request", http.MethodGet, "", http.StatusOK},
+		{"POST request", http.MethodPost, "", http.StatusCreated},
+		{"PUT request", http.MethodPut, "", http.StatusMethodNotAllowed},
+		{"DELETE request", http.MethodDelete, "", http.StatusMethodNotAllowed},
 	}
 	
 	for _, testReq := range(testRequests) {
@@ -52,12 +54,7 @@ func TestTodosByIdHandle(t *testing.T) {
 		Completed: new(bool),
 	})
 
-	tests := []struct {
-		name       string
-		method     string
-		id         string
-		expectedStatus int
-	}{
+	testRequests := []TestRequest {
 		{"GET request", http.MethodGet, mockid, http.StatusOK},
 		{"POST request", http.MethodPost, mockid, http.StatusMethodNotAllowed},
 		{"PUT request invalid id", http.MethodPut, "", http.StatusBadRequest},
@@ -66,7 +63,7 @@ func TestTodosByIdHandle(t *testing.T) {
 		{"DELETE request", http.MethodDelete, mockid, http.StatusOK},
 	}
 	
-	for _, test := range tests {
+	for _, test := range testRequests {
 		t.Run(test.name, func(t *testing.T) {
 			req, err := http.NewRequest(test.method, "/todos/" + test.id, nil)
 			if err != nil {
