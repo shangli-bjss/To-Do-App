@@ -5,10 +5,10 @@ import (
 	"strings"
 )
 
-func getAndPostHandler(w http.ResponseWriter, req *http.Request){
+func todosHandler(w http.ResponseWriter, req *http.Request){
 	switch req.Method{
 	case http.MethodGet:
-		getTodo(w)
+		getTodos(w)
 	case http.MethodPost:
 		postTodo(w, req)
 	default:
@@ -16,12 +16,14 @@ func getAndPostHandler(w http.ResponseWriter, req *http.Request){
 	}
 }
 
-func putAndDeleteHandler(w http.ResponseWriter, req *http.Request){
+func todosByIdHandler(w http.ResponseWriter, req *http.Request){
 	id := strings.TrimPrefix(req.URL.Path, "/todos/")
 	if id == "" {
 		http.Error(w, "Invalid URL path", http.StatusBadRequest)
 	}
 	switch req.Method {
+	case http.MethodGet:
+		getTodoById(w, id)
 	case http.MethodPut:
 		putTodo(w, req, id)
 	case http.MethodDelete:

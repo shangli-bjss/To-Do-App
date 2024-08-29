@@ -6,6 +6,7 @@ A simple in memory To-Do App built using Go.
 
 * List all To-Do items
 * Create new To-Do items
+* Get a To-Do item by its ID
 * Update existing To-Do items
 * Delete To-Do items
 
@@ -14,6 +15,7 @@ A simple in memory To-Do App built using Go.
 
 * `GET /todos`: Get all To-Do items
 * `POST /todos`: Create a new To-Do item
+* `GET /todos/{id}`: Get a To-Do item by its ID
 * `PUT /todos/{id}`: Update a To-Do item
 * `DELETE /todos/{id}`: Delete a To-Do item
 
