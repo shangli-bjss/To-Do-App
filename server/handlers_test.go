@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -81,8 +80,6 @@ func TestPutAndDeleteHandler(t *testing.T) {
 			putAndDeleteHandler(w, req)
 
 			if w.Code != test.expectedStatus {
-				fmt.Println(req.URL)
-				fmt.Println(TodoList)
 				t.Errorf("expected status code %d, got %d", test.expectedStatus, w.Code)
 			}
 		})

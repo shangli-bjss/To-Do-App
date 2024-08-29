@@ -3,7 +3,6 @@ package server
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -39,7 +38,6 @@ func TestGetTodo(t *testing.T) {
 	}
 
 	if len(response) != 1 {
-		fmt.Println("todolist on test", TodoList)
 		t.Errorf("expected 1 todo but got %d", len(response))
 	}
 

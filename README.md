@@ -1,6 +1,6 @@
 # To-Do App
 
-A simple To-Do App built using Go.
+A simple in memory To-Do App built using Go.
 
 ## Features
 
