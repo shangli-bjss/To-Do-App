@@ -2,7 +2,6 @@ package server
 
 import (
 	"net/http"
-	"strings"
 )
 
 func todosHandler(w http.ResponseWriter, req *http.Request){
@@ -17,10 +16,7 @@ func todosHandler(w http.ResponseWriter, req *http.Request){
 }
 
 func todosByIdHandler(w http.ResponseWriter, req *http.Request){
-	id := strings.TrimPrefix(req.URL.Path, "/todos/")
-	if id == "" {
-		http.Error(w, "Invalid URL path - No ID provided", http.StatusBadRequest)
-	}
+	id := req.PathValue("id")	
 	switch req.Method {
 	case http.MethodGet:
 		getTodoById(w, id)

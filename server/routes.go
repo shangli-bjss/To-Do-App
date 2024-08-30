@@ -6,5 +6,5 @@ import (
 
 func registerRoutes() {
     http.HandleFunc("/todos", todosHandler)
-    http.HandleFunc("/todos/", todosByIdHandler)
+    http.HandleFunc("/todos/{id}", todosByIdHandler)
 }
